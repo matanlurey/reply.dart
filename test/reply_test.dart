@@ -1,4 +1,4 @@
-import 'package:replay/reply.dart';
+import 'package:reply/reply.dart';
 import 'package:test/test.dart';
 
 void main() {
