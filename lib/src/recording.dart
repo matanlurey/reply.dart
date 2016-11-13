@@ -2,18 +2,25 @@ part of reply;
 
 class _DefaultRecording<Q, R> implements Recording<Q, R> {
   final List<Record<Q, R>> _recordings;
+  final Equality<Q> _requestEquality;
 
-  _DefaultRecording(this._recordings);
+  _DefaultRecording(
+    this._recordings, {
+    Equality<Q> requestEquality: const IdentityEquality(),
+  })
+      : _requestEquality = requestEquality {
+    assert(_requestEquality != null);
+  }
 
   @override
   bool hasRecord(Q request) {
-    return _recordings.any((r) => r.request == request);
+    return _recordings.any((r) => _requestEquality.equals(request, r.request));
   }
 
   @override
   R reply(Q request) {
     for (var i = 0; i < _recordings.length; i++) {
-      if (_recordings[i].request == request) {
+      if (_requestEquality.equals(_recordings[i].request, request)) {
         return _replyAt(i);
       }
     }

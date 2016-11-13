@@ -6,6 +6,8 @@
 /// - Reusable as a record/replay infrastructure for e2e testing
 library reply;
 
+import 'package:collection/collection.dart';
+
 part 'src/conclusion_builder.dart';
 part 'src/recorder.dart';
 part 'src/recording.dart';
@@ -35,7 +37,10 @@ abstract class Record<Q, R> {
 ///     recorder.toRecording().reply('Hello') // Returns 'Hi there!'
 abstract class Recorder<Q, R> {
   /// Create a new empty recorder.
-  factory Recorder() => new _DefaultRecorder<Q, R>();
+  factory Recorder({
+    Equality<Q> requestEquality: const IdentityEquality(),
+  }) =>
+      new _DefaultRecorder<Q, R>(requestEquality: requestEquality);
 
   /// Adds a configured [record].
   ///
