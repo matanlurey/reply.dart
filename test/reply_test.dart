@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:collection/collection.dart';
 import 'package:reply/reply.dart';
 import 'package:test/test.dart';
@@ -32,6 +34,45 @@ void main() {
         expect(recording.reply('Hello'), 'Hi there!');
       }
       expect(recording.hasRecord('Hello'), isTrue);
+    });
+
+    test('should encode as a valid JSON', () {
+      recorder
+          .given('Hello')
+          .reply('Hi there!')
+          .times(2)
+          .given('Thanks')
+          .reply('You are welcome!')
+          .always();
+      final json = recorder.toRecording().toJsonEncodable(
+        encodeRequest: (q) => q,
+        encodeResponse: (r) => r,
+      );
+      expect(json, [
+        {
+          'always': false,
+          'request': 'Hello',
+          'response': 'Hi there!',
+        },
+        {
+          'always': false,
+          'request': 'Hello',
+          'response': 'Hi there!',
+        },
+        {
+          'always': true,
+          'request': 'Thanks',
+          'response': 'You are welcome!',
+        },
+      ]);
+      expect(JSON.decode(JSON.encode(json)), json);
+      final copy = new Recording<String, String>.fromJson(
+        json,
+        toRequest: (q) => q,
+        toResponse: (r) => r,
+      );
+      expect(copy.hasRecord('Hello'), isTrue);
+      expect(copy.hasRecord('Thanks'), isTrue);
     });
   });
 

@@ -1,26 +1,27 @@
 part of reply;
 
 class _DefaultRecording<Q, R> implements Recording<Q, R> {
-  final List<Record<Q, R>> _recordings;
+  final List<Record<Q, R>> _records;
   final Equality<Q> _requestEquality;
 
   _DefaultRecording(
-    this._recordings, {
+    Iterable<Record<Q, R>> records, {
     Equality<Q> requestEquality: const IdentityEquality(),
   })
-      : _requestEquality = requestEquality {
+      : _records = records.toList(),
+        _requestEquality = requestEquality {
     assert(_requestEquality != null);
   }
 
   @override
   bool hasRecord(Q request) {
-    return _recordings.any((r) => _requestEquality.equals(request, r.request));
+    return _records.any((r) => _requestEquality.equals(request, r.request));
   }
 
   @override
   R reply(Q request) {
-    for (var i = 0; i < _recordings.length; i++) {
-      if (_requestEquality.equals(_recordings[i].request, request)) {
+    for (var i = 0; i < _records.length; i++) {
+      if (_requestEquality.equals(_records[i].request, request)) {
         return _replyAt(i);
       }
     }
@@ -28,10 +29,22 @@ class _DefaultRecording<Q, R> implements Recording<Q, R> {
   }
 
   R _replyAt(int index) {
-    final record = _recordings[index];
+    final record = _records[index];
     if (!record.always) {
-      _recordings.removeAt(index);
+      _records.removeAt(index);
     }
     return record.response;
   }
+
+  @override
+  toJsonEncodable({
+    encodeRequest(Q request),
+    encodeResponse(R response),
+  }) => _records.map((record) {
+    return {
+      'always': record.always,
+      'request': encodeRequest(record.request),
+      'response': encodeResponse(record.response),
+    };
+  }).toList();
 }

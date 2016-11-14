@@ -24,9 +24,6 @@ class _DefaultRecorder<Q, R> implements Recorder<Q, R> {
 
   @override
   Recording<Q, R> toRecording() {
-    return new _DefaultRecording(
-      _records.toList(),
-      requestEquality: _requestEquality,
-    );
+    return new Recording(_records, requestEquality: _requestEquality);
   }
 }

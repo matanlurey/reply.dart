@@ -36,8 +36,11 @@ abstract class Record<Q, R> {
 /// A recorder can be converted to a [Recording] to play back:
 ///     recorder.toRecording().reply('Hello') // Returns 'Hi there!'
 abstract class Recorder<Q, R> {
-  /// Create a new empty recorder.
+  /// Create a new empty [Recorder].
+  ///
+  /// Optionally specify how request object [Q] should be identified.
   factory Recorder({
+    /// Optionally specify how a request [Q] should be considered equal.
     Equality<Q> requestEquality: const IdentityEquality(),
   }) =>
       new _DefaultRecorder<Q, R>(requestEquality: requestEquality);
@@ -58,6 +61,31 @@ abstract class Recorder<Q, R> {
 }
 
 abstract class Recording<Q, R> {
+  /// Create a new set of [records].
+  ///
+  /// Optionally specify how a request [Q] should be considered equal.
+  factory Recording(
+    Iterable<Record<Q, R>> records, {
+    Equality<Q> requestEquality: const IdentityEquality(),
+  }) =>
+      new _DefaultRecording(records, requestEquality: requestEquality);
+
+  /// Return a new set of records by decoding JSON [data].
+  factory Recording.fromJson(Iterable<Map<String, dynamic>> data, {
+    Q toRequest(request),
+    R toResponse(response),
+    Equality<Q> requestEquality: const IdentityEquality(),
+  }) {
+    return new Recording(
+      data.map((r) => new _DefaultRecord(
+        toRequest(r['request']),
+        toResponse(r['response']),
+        always: r['always'] == true,
+      )),
+      requestEquality: requestEquality,
+    );
+  }
+
   /// Returns whether [request] is recorded.
   bool hasRecord(Q request);
 
@@ -65,6 +93,14 @@ abstract class Recording<Q, R> {
   ///
   /// If not found throws [StateError].
   R reply(Q request);
+
+  /// Returns a JSON serializable object from this set of recordings.
+  ///
+  /// Uses [encodeRequest] and [encodeResponse] to handle further encoding.
+  toJsonEncodable({
+    encodeRequest(Q request),
+    encodeResponse(R response),
+  });
 }
 
 abstract class ResponseBuilder<Q, R> {
